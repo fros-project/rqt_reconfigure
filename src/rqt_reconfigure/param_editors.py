@@ -153,6 +153,39 @@ class BooleanEditor(EditorWidget):
         self._update_signal.emit(value)
 
 
+class DropDownListEditor(EditorWidget):
+    _update_signal = Signal(int)
+
+    def __init__(self, *args, **kwargs):
+        super(DropDownListEditor, self).__init__(*args, **kwargs)
+        ui_ddl = os.path.join(
+            package_path, 'share', 'rqt_reconfigure', 'resource',
+            'editor_drop_down_list.ui'
+        )
+        loadUi(ui_ddl, self)
+
+        self.contraints = self.descriptor.additional_constraints.split("\n")[1:]
+        self.drop_down_items = []
+
+        for item in self.contraints:
+            t = item.split(",")
+            self.drop_down_items.append(t[1])
+
+        self._paramval_drop_down_list.addItems(self.drop_down_items)
+        self._paramval_drop_down_list.setCurrentIndex(self.parameter.value)
+
+        self._update_signal.connect(self._paramval_drop_down_list.setCurrentIndex)
+
+        self._paramval_drop_down_list.currentIndexChanged.connect(self.index_changed)
+
+    def index_changed(self, index):
+        self.update(int(index))
+
+    def update_local(self, value):
+        super(DropDownListEditor, self).update_local(value)
+        self._update_signal.emit(value)
+
+
 class StringEditor(EditorWidget):
     _update_signal = Signal(str)
 
@@ -445,4 +478,5 @@ EDITOR_TYPES = {
     Parameter.Type.INTEGER: IntegerEditor,
     Parameter.Type.DOUBLE: DoubleEditor,
     Parameter.Type.STRING: StringEditor,
+    "DROP_DOWN_LIST": DropDownListEditor,
 }
